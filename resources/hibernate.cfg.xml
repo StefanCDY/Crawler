@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+          "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+          "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+	<session-factory>
+		<!-- Database connection settings -->
+		<property name="hibernate.connection.provider_class">org.hibernate.connection.ProxoolConnectionProvider</property>
+		<property name="hibernate.proxool.pool_alias">DBPool</property>
+		<property name="hibernate.proxool.xml">proxool.xml</property>
+
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+		<property name="hibernate.show_sql">false</property>
+		<property name="hibernate.format_sql">true</property>
+		<property name="javax.persistence.validation.mode">none</property>
+
+		<!-- 每次从数据库中取出并放到JDBC的Statement中的记录条数。Fetch_Size设的越大，读数据库的次数越少，速度越快，Fetch_Size越小，读数据库的次数越多，速度越慢 -->
+		<property name="hibernate.jdbc.fetch_size">50</property>
+		<!-- 批量插入,删除和更新时每次操作的记录数。Batch_Size越大，批量操作的向数据库发送SQL的次数越少，速度就越快，同样耗用内存就越大 -->
+		<property name="hibernate.jdbc.batch_size">30</property>
+		<!-- 设置数据库连接池默认个数 -->
+		<property name="hibernate.connection.pool_size">1</property>
+		<property name="hibernate.connection.release_mode">after_transaction</prop>
+		<!-- 设置使用线程 -->
+		<property name="hibernate.current_session_context_class">thread</property>
+
+		<mapping class="com.zhihucrawler.model.UrlList" />
+		<mapping class="com.zhihucrawler.model.UserInfo" />
+
+	</session-factory>
+
+</hibernate-configuration>
