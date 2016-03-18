@@ -83,8 +83,8 @@ public class CrawlStart {
 	 */
 	public static void main(String[] args) {
 		long time1 = System.currentTimeMillis();
-		
-		String[] seeds = {"https://www.zhihu.com/people/nuan-nuan-nuan-chun-lai"};
+		//people/nuan-nuan-nuan-chun-lai
+		String[] seeds = {"https://www.zhihu.com/"};
 		CrawlStart start = new CrawlStart();
 		start.crawling(seeds);
 		
