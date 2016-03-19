@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
@@ -21,10 +23,11 @@ import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.PieDataset;
 
 import com.zhihucrawler.config.Const;
+import com.zhihucrawler.database.ZhihuCrawlerDB;
 
 public class UserInfoChart {
 	
-	private static PieDataset createDataset(List<Object[]> list) {
+	private PieDataset createDataset(List<Object[]> list) {
 		DefaultPieDataset dataset = new DefaultPieDataset();
 		long sum = 0;
 		for (Object[] objects : list) {
@@ -36,7 +39,7 @@ public class UserInfoChart {
 		return dataset;
 	}
 	
-	private static JFreeChart createChart(String title, PieDataset dataset) {
+	private JFreeChart createChart(String title, PieDataset dataset) {
 		
 		// 创建主题样式
 		StandardChartTheme standardChartTheme = new StandardChartTheme("CN");
@@ -76,6 +79,13 @@ public class UserInfoChart {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void main(String[] args) {
+		ZhihuCrawlerDB crawlerDB = new ZhihuCrawlerDB();
+		List<Object[]> list = crawlerDB.countGender();
+		UserInfoChart infoChart = new UserInfoChart();
+		infoChart.generateGenderPieChart(list);
 	}
 	
 	private static CategoryDataset createDataset1() {

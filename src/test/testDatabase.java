@@ -42,7 +42,7 @@ public class testDatabase {
 		UserInfoDao dao = new UserInfoDao();
 		List<Object[]> list = dao.getUserGenderRatio();
 		UserInfoChart infoChart = new UserInfoChart();
-		infoChart.generateGenderPieChart(list);
+//		infoChart.generateGenderPieChart(list);
 	}
 	
 }

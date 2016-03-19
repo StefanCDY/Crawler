@@ -20,7 +20,7 @@
 		<property name="hibernate.jdbc.batch_size">30</property>
 		<!-- 设置数据库连接池默认个数 -->
 		<property name="hibernate.connection.pool_size">1</property>
-		<property name="hibernate.connection.release_mode">after_transaction</prop>
+		<property name="hibernate.connection.release_mode">after_transaction</property>
 		<!-- 设置使用线程 -->
 		<property name="hibernate.current_session_context_class">thread</property>
 

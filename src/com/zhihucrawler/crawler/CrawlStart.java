@@ -64,15 +64,14 @@ public class CrawlStart {
 			if (visitUrl == null) {
 				continue;
 			}
-			
+			System.out.println(i + "==>" + visitUrl);
 			CrawlLink crawlLink = new CrawlLink(visitUrl);
 			Set<String> links = crawlLink.crawlAllLink();// 抓取网页中的URL
 			System.out.println(i + "==>" + visitUrl + "==>抓取的URL数量:" + links.size());
 			for (String link : links) {// 新的未访问的URL入队列
 				LinkQueue.addUnVisitedUrl(link);
 			}
-			System.out.println(i + "==>URL队列中未访问的数量:" + LinkQueue.getUnVisitedUrl().getSize());
-			
+//			System.out.println(i + "==>URL队列中未访问的数量:" + LinkQueue.getUnVisitedUrl().getSize());
 			LinkQueue.addVisitedUrl(visitUrl);// 添加已访问URL
 			i++;
 		}
@@ -83,7 +82,10 @@ public class CrawlStart {
 	 */
 	public static void main(String[] args) {
 		long time1 = System.currentTimeMillis();
-		//people/nuan-nuan-nuan-chun-lai
+		// http://eol.zhbit.com/
+		// https://www.zhihu.com/people/stefan-77
+		// https://www.zhihu.com/people/Kirio
+		// https://www.zhihu.com/terms#sec-licence-6
 		String[] seeds = {"https://www.zhihu.com/"};
 		CrawlStart start = new CrawlStart();
 		start.crawling(seeds);

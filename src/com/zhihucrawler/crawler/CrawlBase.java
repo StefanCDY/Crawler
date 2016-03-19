@@ -15,6 +15,7 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
 import org.apache.http.Header;
+import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpRequest;
@@ -110,10 +111,17 @@ public abstract class CrawlBase {
 		params.put("Accept-Encoding", "gzip, deflate, br");
 		params.put("Accept-Language", "zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3");
 		params.put("Connection", "keep-alive");
-		params.put("Cookie", "q_c1=6e908fb2156e44eeaa9200c7faaad076|1457511240000|1454752297000; cap_id=\"N2RiMTMxODQwZjAwNGEyZWI5YWJjMTFmYTVkMTQ4MWI=|1458204041|c54af4c9fede40f18d78fecc1524a4d58b7a41e6\"; _za=a7e8266d-324f-46fe-a243-70edcd17b647; __utma=51854390.613105210.1458200811.1458200811.1458200811.1; __utmz=51854390.1458200811.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); z_c0=\"QUJES0dUa2Zkd2tYQUFBQVlRSlZUWnI2RVZmYldGb1B5RDZNRmc1RU9naHFnQVg1ZWZnNzV3PT0=|1458204058|b0de11c46293634323c9247c3b0464b27d4eb3b5\"; _xsrf=95ddb08fc9b084718aac9aeafc9e9acf; udid=\"AIAAPuxSlAmPTmyUrcrtwMkNfMU7KwsAB2s=|1457511256\"; n_c=1; __utmc=51854390; __utmb=51854390.10.10.1458200811; __utmv=51854390.100--|2=registration_date=20160214=1^3=entry_date=20160206=1; unlock_ticket=\"QUJES0dUa2Zkd2tYQUFBQVlRSlZUYUowNmxiWmVLeEpPM2JqcDhWMWI5emo5ckIxUWxVZlh3PT0=|1458204058|c7f24fdf65d79c93e35bcb818c905cac4ee5e169\"; __utmt=1");
+		params.put("Cookie", Const.COOKIE);
 		params.put("Host", "www.zhihu.com");
 		params.put("Referer", "https://www.zhihu.com/");
 		params.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0");
+		
+//		params.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+//		params.put("Accept-Encoding", "gzip, deflate");
+//		params.put("Accept-Language", "zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3");
+//		params.put("Connection", "keep-alive");
+//		params.put("Cookie", "JSESSIONID=738FEB146B8D81CB15513C2984217190");
+//		params.put("Host", "eol.zhbit.com");
 	}
 	
 	/** 
@@ -156,32 +164,26 @@ public abstract class CrawlBase {
 	 */
 	private boolean crawlPage(HttpUriRequest request, String defaultCharset, String url) {
 		try {
-//			ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
-//				
-//				@Override
-//				public String handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-//					// TODO Auto-generated method stub
-//					int statusCode = response.getStatusLine().getStatusCode();// 获取访问的状态码
-//					System.out.println(statusCode);
-//					if (statusCode == HttpStatus.SC_OK) {
-//						// 5.处理HTTP响应内容
-//						HttpEntity httpEntity = response.getEntity();// 获取响应消息主体
-//						if (httpEntity != null) {
-//							System.out.println("Content　Encoding　is " + httpEntity.getContentEncoding());
-//							return EntityUtils.toString(httpEntity);// 获取消息字节数据
-//						}
-//					}
-//					return null;
-//				}
-//			};
-			
 			CloseableHttpResponse response = httpClient.execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
-			
-			if (statusCode != HttpStatus.SC_OK) {
-				request.abort();
+			if ((statusCode == HttpStatus.SC_MOVED_PERMANENTLY) || (statusCode == HttpStatus.SC_MOVED_TEMPORARILY) || (statusCode == HttpStatus.SC_SEE_OTHER) || (statusCode == HttpStatus.SC_TEMPORARY_REDIRECT)) {
 				System.out.println(url + "==>请求状态码:" + statusCode);
-				
+				this.responseHeaders = response.getAllHeaders();
+				HeaderIterator iterator = response.headerIterator("location");
+				System.out.println("===============================");
+				while (iterator.hasNext()) {
+					System.out.println(iterator.next());
+				}
+				System.out.println("===============================");
+				request.abort();
+//				Header header = request.getResponseHeader("location");
+//				if(header!=null){
+//					String newUrl = header.getValue();
+//					if(newUrl==null||newUrl.equals("")){
+//						newUrl="/";
+//						PostMethod redirect = new PostMethod(newUrl);
+//					}
+//				}
 			} else if (statusCode == HttpStatus.SC_OK) { 
 				this.responseHeaders = response.getAllHeaders();
 				this.requestHeaders = request.getAllHeaders();
@@ -207,11 +209,16 @@ public abstract class CrawlBase {
 				in.close();
 				response.close();
 				return true;
+			} else {
+				request.abort();
+				System.out.println(url + "==>请求状态码:" + statusCode);
 			}
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			request.abort();
 		}
 		return false;
 	}

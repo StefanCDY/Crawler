@@ -5,9 +5,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.zhihucrawler.config.Const;
+import com.zhihucrawler.database.ZhihuCrawlerDB;
 import com.zhihucrawler.model.UrlList;
 import com.zhihucrawler.model.UserInfo;
-import com.zhihucrawler.parser.ParserLink;
+import com.zhihucrawler.parser.HtmlParserTool;
 import com.zhihucrawler.parser.ParserUser;
 import com.zhihucrawler.utils.JsonUtil;
 
@@ -39,13 +40,13 @@ public class CrawlLink extends CrawlBase {
 		this.crawlPageByGet(url, charset);
 		
 		
-		ParserLink link = new ParserLink();
-		Set<String> links = link.parserUserLink(url, this.getPageSourceCode(), charset);
+//		ParserLink link = new ParserLink();
+//		Set<String> links = link.parserUserLink(url, this.getPageSourceCode(), charset);
 //		System.out.println("links:" + links.size());
 //		for (int i = 0; i < links.size(); i++) {
 //			System.out.println(links.toArray()[i]);
 //		}
-		return links;
+		return null;
 	}
 	
 	/**
@@ -59,16 +60,14 @@ public class CrawlLink extends CrawlBase {
 		Set<String> links = new HashSet<String>();
 		if (this.crawlPageByGet(url, charset)) {
 //			System.out.println(this.getPageSourceCode());
-			links = ParserLink.parserAllLink(url, this.getPageSourceCode(), charset);
-			
+			links = HtmlParserTool.extracLinks(url, this.getPageSourceCode(), charset);
 			if (this.url.startsWith("https://www.zhihu.com/people/")) {// 抓取用户主页信息
-//				System.out.println(url);
-//				ParserUser parserUser = new ParserUser();
-//				UserInfo userInfo = parserUser.parserUserInfo(url, this.getPageSourceCode(), charset);
-//				System.out.println(JsonUtil.parseJson(userInfo));
+				UserInfo userInfo = ParserUser.parserUserInfo(url, this.getPageSourceCode(), charset);
+				ZhihuCrawlerDB crawlerDB = new ZhihuCrawlerDB();
+				crawlerDB.saveUserInfo(userInfo);
+				System.out.println(JsonUtil.parseJson(userInfo));
 			}
 		}
-		
 		return links;
 	}
 	

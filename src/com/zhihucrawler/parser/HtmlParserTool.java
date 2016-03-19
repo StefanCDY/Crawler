@@ -13,9 +13,9 @@ import org.htmlparser.util.ParserException;
 
 import com.zhihucrawler.utils.RegexUtil;
 
-public class ParserLink {
+public class HtmlParserTool {
 	
-	public ParserLink() {
+	public HtmlParserTool() {
 		super();
 	}
 	
@@ -26,7 +26,7 @@ public class ParserLink {
 	 * @param charset 解析编码
 	 * @return
 	 */
-	public static Set<String> parserAllLink(String url, String html, String charset) {
+	public static Set<String> extracLinks(String url, String html, String charset) {
 		Set<String> links = new HashSet<String>();
 		try {
 			Parser parser = Parser.createParser(html, charset);
@@ -39,7 +39,7 @@ public class ParserLink {
 				if (index != -1) {// 含有"#"
 					link = link.substring(0, index);
 				}
-				if (link.contains("www.zhihu.com") && !link.contains("careers")) {					
+				if (link.startsWith("https://www.zhihu.com/")) {					
 					links.add(link);
 				}
 			}
