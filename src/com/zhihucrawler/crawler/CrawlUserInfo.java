@@ -29,7 +29,7 @@ public class CrawlUserInfo extends CrawlBase {
 		if (charset == null || "".equals(charset)) {
 			charset = Const.CHARSET;
 		}
-		this.crawlPageByGet(url, charset);
+//		this.crawlPageByGet(url);
 		ParserUser parser = new ParserUser();
 		UserInfo userInfo = parser.parserUserInfo(url, this.getPageSourceCode(), charset);
 		return userInfo;

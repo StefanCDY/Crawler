@@ -1,2 +1,2 @@
-# Crawler--zhihu -- version 1.0
+# Crawler
 Java web crawler directional grab zhihu data

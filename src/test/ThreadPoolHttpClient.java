@@ -1,9 +1,7 @@
 package test;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -24,6 +22,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 //并发请求
 public class ThreadPoolHttpClient {
+//	ThreadPoolExecutor executor = new 
     // 线程池
     private ExecutorService exe = null;
     // 线程池的容量

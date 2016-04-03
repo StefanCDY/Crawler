@@ -52,7 +52,7 @@ public class CharsetUtil {
 	 * @param defaultCharset
 	 * @return String 检测InputStream的编码方式
 	 */
-	public static String getStreamChaset(InputStream inputStream, String defaultCharset) {
+	public static String getStreamCharset(InputStream inputStream, String defaultCharset) {
 		if (inputStream == null) {
 			return defaultCharset;
 		}

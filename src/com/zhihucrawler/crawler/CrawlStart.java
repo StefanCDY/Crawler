@@ -1,6 +1,8 @@
 package com.zhihucrawler.crawler;
 
-import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.zhihucrawler.config.LinkQueue;
 
@@ -10,88 +12,94 @@ import com.zhihucrawler.config.LinkQueue;
  */
 public class CrawlStart {
 	
-	private static boolean booleanCrawlLink = false;
-	private static boolean booleanCrawlUserInfo = false;
+	private int threadPoolNum = 1;
+	private ExecutorService executorService = null;
 	
-	private static int crawlLinkThreadNum = 1;
-	private static int crawlUserInfoThreadNum = 10;
+	public CrawlStart() {
+		
+	}
 	
-	/**
-	 * @description 初始化URL队列
-	 * @param seeds
-	 */
-	private void initCrawlerWithSeeds(String[] seeds) {
+	public CrawlStart(int threadPoolNum) {
+		if (threadPoolNum < 1) {
+			threadPoolNum = 1;
+		}
+		this.threadPoolNum = threadPoolNum;
+	}
+	
+	private void init(String[] seeds) {
+		// 初始化种子duil
 		for (int i = 0; i < seeds.length; i++) {
 			LinkQueue.addUnVisitedUrl(seeds[i]);
 		}
+		// 初始化程序池
+		this.executorService = Executors.newFixedThreadPool(this.threadPoolNum);
 	}
 	
-	/**
-	 * @Description: 启动简介页采集线程
-	 */
-	public void startCrawlLink() {
-		if (booleanCrawlLink) {
-			return;
+	public void crawling() {
+		for (int i = 0; i < this.threadPoolNum; i++) {
+			executorService.execute(new CrawlThread("Thread:" + i));
 		}
-		booleanCrawlLink = true;
-		for (int i = 0; i < crawlLinkThreadNum; i++) {
-			CrawlLinkThread thread = new CrawlLinkThread("LinkThread " + i);
-			thread.start();
-		}
-	}
-	
-	/**
-	 * @Description: 启动用户信息采集线程
-	 */
-	public void startCrawlUserinfo() {
-		if (booleanCrawlUserInfo) {
-			return;
-		}
-		booleanCrawlUserInfo = true;
-		for (int i = 0; i < crawlUserInfoThreadNum; i++) {
-			CrawlUserInfoThread thread = new CrawlUserInfoThread("UserInfoThread " + i);
-			thread.start();
-		}
-	}
-	
-	public void crawling(String[] seeds){
-		int i = 1;
-		initCrawlerWithSeeds(seeds);// 初始化URL队列
+		executorService.shutdown();// 不能再提交新任务,等待执行的任务不受影响
 		
-		while(!LinkQueue.unVisitedUrlIsEmpty() && LinkQueue.getVisitedUrlNum() < 100){
-			
-			String visitUrl = (String) LinkQueue.unVisitedUrlDeQueue();// 获取待访问的URL
-			if (visitUrl == null) {
-				continue;
-			}
-			System.out.println(i + "==>" + visitUrl);
-			CrawlLink crawlLink = new CrawlLink(visitUrl);
-			Set<String> links = crawlLink.crawlAllLink();// 抓取网页中的URL
-			System.out.println(i + "==>" + visitUrl + "==>抓取的URL数量:" + links.size());
-			for (String link : links) {// 新的未访问的URL入队列
-				LinkQueue.addUnVisitedUrl(link);
-			}
+		try {
+			boolean loop = true;
+			do {// 等待所有任务完成  
+				loop = executorService.awaitTermination(1, TimeUnit.SECONDS);// 阻塞,直到线程池里所有任务结束,每隔1秒监测一次
+			} while (!loop);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}		
+		
+//		while(!LinkQueue.unVisitedUrlIsEmpty() && LinkQueue.getVisitedUrlNum() < 1){
+//			
+//			String visitUrl = (String) LinkQueue.unVisitedUrlDeQueue();// 获取待访问的URL
+//			if (visitUrl == null) {
+//				continue;
+//			}
+//			System.out.println(i + "==>" + visitUrl);
+//			CrawlLink crawlLink = new CrawlLink(visitUrl);
+//			Set<String> links = crawlLink.crawlAllLink();// 抓取网页中的URL
+//			System.out.println(i + "==>" + visitUrl + "==>抓取的URL数量:" + links.size());
+//			for (String link : links) {// 新的未访问的URL入队列
+//				LinkQueue.addUnVisitedUrl(link);
+//			}
 //			System.out.println(i + "==>URL队列中未访问的数量:" + LinkQueue.getUnVisitedUrl().getSize());
-			LinkQueue.addVisitedUrl(visitUrl);// 添加已访问URL
-			i++;
-		}
+//			LinkQueue.addVisitedUrl(visitUrl);// 添加已访问URL
+//			i++;
+//		}
 	}
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		long time1 = System.currentTimeMillis();
+		long start = System.currentTimeMillis();
 		// http://eol.zhbit.com/
 		// https://www.zhihu.com/people/stefan-77
 		// https://www.zhihu.com/people/Kirio
-		// https://www.zhihu.com/terms#sec-licence-6
-		String[] seeds = {"https://www.zhihu.com/"};
-		CrawlStart start = new CrawlStart();
-		start.crawling(seeds);
+		// https://www.zhihu.com/terms#sec-licence-6  people/shi-yu-52-32
+		CrawlBase base = new CrawlBase();
+		base.login();
 		
-		long time2 = System.currentTimeMillis();
-		long time = time2 - time1;
+		String url = "https://www.zhihu.com/";
+		int threadPoolNum = 20;
+		String[] seeds = {url};
+		
+		CrawlStart crawlStart = new CrawlStart(threadPoolNum);
+		// 初始化操作
+		crawlStart.init(seeds);
+		System.out.println("抓取前。。。。。。");
+		System.out.println("已访问：" + LinkQueue.getVisitedUrlNum());
+		System.out.println("未访问：" + LinkQueue.getUnVisitedUrlNum());
+		
+		// 抓取......
+		crawlStart.crawling();
+		System.out.println("抓取后。。。。。。");
+		System.out.println("已访问：" + LinkQueue.getVisitedUrlNum());
+		System.out.println("未访问：" + LinkQueue.getUnVisitedUrlNum());
+		
+		long end = System.currentTimeMillis();
+		long time = end - start;
 		System.out.println("程序总共耗时:" + time);
 	}
 

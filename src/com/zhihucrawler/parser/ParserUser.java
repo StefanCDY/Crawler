@@ -9,7 +9,6 @@ import org.htmlparser.tags.ImageTag;
 import org.htmlparser.tags.LinkTag;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
-import org.jsoup.Jsoup;
 
 import com.zhihucrawler.model.UserInfo;
 import com.zhihucrawler.utils.EncryptUtil;
@@ -67,11 +66,15 @@ public class ParserUser {
 	}
 
 	// 解析用户简介
-	private static String parserUserContent(String info, String charset) throws ParserException {
+	private static String parserUserDescription(String info, String charset) throws ParserException {
 		Parser parser = Parser.createParser(info, charset);
 		NodeFilter descFilter = new HasAttributeFilter("class", "content");
 		NodeList nodeList = parser.extractAllNodesThatMatch(descFilter);
 		if (nodeList.size() > 0) {
+//			String description = nodeList.elementAt(0).toPlainTextString().trim();
+//			if (description.length() > 255) {
+//				description = description.substring(0, 254) + "...";
+//			}
 			return nodeList.elementAt(0).toPlainTextString().trim();
 		}
 		return null;
@@ -334,7 +337,7 @@ public class ParserUser {
 				userinfo.setName(parserUserName(info, charset));
 				userinfo.setGender(parserUserGender(info, charset));
 				userinfo.setHeadline(parserUserHeadLine(info, charset));
-				userinfo.setDescription(parserUserContent(info, charset));
+				userinfo.setDescription(parserUserDescription(info, charset));
 				userinfo.setLocation(parserUserLocation(info, charset));
 				userinfo.setBusiness(parserUserBusiness(info, charset));
 				userinfo.setEmployment(parserUserEmployment(info, charset));

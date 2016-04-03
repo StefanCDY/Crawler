@@ -236,7 +236,7 @@ public class RegexUtil {
 	public static void main(String[] args) {
 		String dealStr = "ab1234asdvahdckhka";
 		String regexStr = "a(.*?)a";
-		System.out.println(RegexUtil.getFirstString("", regexStr, 1));
+		System.out.println(RegexUtil.getFirstString(dealStr, regexStr, 1));
 	}
 
 }

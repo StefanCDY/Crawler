@@ -1,15 +1,10 @@
 package com.zhihucrawler.crawler;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import com.zhihucrawler.config.Const;
-import com.zhihucrawler.database.ZhihuCrawlerDB;
-import com.zhihucrawler.model.UrlList;
-import com.zhihucrawler.model.UserInfo;
 import com.zhihucrawler.parser.HtmlParserTool;
-import com.zhihucrawler.parser.ParserUser;
 import com.zhihucrawler.utils.JsonUtil;
 
 public class CrawlLink extends CrawlBase {
@@ -37,7 +32,7 @@ public class CrawlLink extends CrawlBase {
 		if (charset == null || "".equals(charset)) {
 			charset = Const.CHARSET;
 		}
-		this.crawlPageByGet(url, charset);
+//		this.crawlPageByGet(url);
 		
 		
 //		ParserLink link = new ParserLink();
@@ -53,20 +48,26 @@ public class CrawlLink extends CrawlBase {
 	 * @description 抓取所有链接
 	 * @return
 	 */
-	public Set<String> crawlAllLink() {
+	public Set<String> crawlLinks() {
 		if (charset == null || "".equals(charset)) {
 			charset = Const.CHARSET;
 		}
+		String pageSource = this.crawlByGet(url);
+		if (pageSource == null || "".equals(pageSource)) {
+			return null;
+		}
+//		if (pageSource.contains("Stefan")) {
+//			System.out.println("登录成功.");
+//		}
+//		System.out.println(pageSource);
 		Set<String> links = new HashSet<String>();
-		if (this.crawlPageByGet(url, charset)) {
-//			System.out.println(this.getPageSourceCode());
-			links = HtmlParserTool.extracLinks(url, this.getPageSourceCode(), charset);
-			if (this.url.startsWith("https://www.zhihu.com/people/")) {// 抓取用户主页信息
-				UserInfo userInfo = ParserUser.parserUserInfo(url, this.getPageSourceCode(), charset);
-				ZhihuCrawlerDB crawlerDB = new ZhihuCrawlerDB();
-				crawlerDB.saveUserInfo(userInfo);
-				System.out.println(JsonUtil.parseJson(userInfo));
-			}
+		links = HtmlParserTool.extracLinks(url, pageSource, charset);
+		if (this.url.startsWith("https://www.zhihu.com/people/")) {// 抓取用户主页信息
+//			UserInfo userInfo = ParserUser.parserUserInfo(url, this.getPageSourceCode(), charset);
+//			ZhihuCrawlerDB crawlerDB = new ZhihuCrawlerDB();
+//			crawlerDB.saveUserInfo(userInfo);
+//			System.out.println(JsonUtil.parseJson(userInfo));
+			System.out.println(this.url);
 		}
 		return links;
 	}

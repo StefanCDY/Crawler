@@ -294,8 +294,7 @@ public class aaaa {
                 HttpGet httpget = new HttpGet(urisToGet[i]);
                 config(httpget);
                 // 启动线程抓取
-                executors
-                        .execute(new GetRunnable(urisToGet[i], countDownLatch));
+                executors.execute(new GetRunnable(urisToGet[i], countDownLatch));
             }
             countDownLatch.await();
             executors.shutdown();

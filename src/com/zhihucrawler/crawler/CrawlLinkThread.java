@@ -9,12 +9,8 @@ import com.zhihucrawler.model.UrlList;
 import com.zhihucrawler.model.UserInfo;
 import com.zhihucrawler.utils.EncryptUtil;
 
-public class CrawlLinkThread extends Thread {
-
-	public CrawlLinkThread(String name) {
-		super(name);
-	}
-
+public class CrawlLinkThread implements Runnable {
+	
 	@Override
 	public void run() {
 		while (!LinkQueue.unVisitedUrlIsEmpty() && LinkQueue.getVisitedUrlNum() < 1000) {
@@ -45,7 +41,7 @@ public class CrawlLinkThread extends Thread {
 
 			// 提取出网页中的URL链接
 			CrawlLink crawlLink = new CrawlLink(url);
-			Set<String> links = crawlLink.crawlAllLink();
+			Set<String> links = crawlLink.crawlLinks();
 			for (String link : links) {
 				LinkQueue.addUnVisitedUrl(link);
 			}
