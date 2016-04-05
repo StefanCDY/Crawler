@@ -11,10 +11,6 @@ public class CrawlLink extends CrawlBase {
 	private String url;
 	private String charset;
 	
-	public CrawlLink() {
-		super();
-	}
-
 	public CrawlLink(String url) {
 		this.url = url;
 	}
@@ -61,7 +57,8 @@ public class CrawlLink extends CrawlBase {
 //		}
 //		System.out.println(pageSource);
 		Set<String> links = new HashSet<String>();
-		links = HtmlParserTool.extracLinks(url, pageSource, charset);
+		HtmlParserTool parserTool = new HtmlParserTool(charset);
+		links = parserTool.extracLinks(url, pageSource);
 		if (this.url.startsWith("https://www.zhihu.com/people/")) {// 抓取用户主页信息
 //			UserInfo userInfo = ParserUser.parserUserInfo(url, this.getPageSourceCode(), charset);
 //			ZhihuCrawlerDB crawlerDB = new ZhihuCrawlerDB();

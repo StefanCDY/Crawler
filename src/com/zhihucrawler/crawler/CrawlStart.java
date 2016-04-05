@@ -15,10 +15,6 @@ public class CrawlStart {
 	private int threadPoolNum = 1;
 	private ExecutorService executorService = null;
 	
-	public CrawlStart() {
-		
-	}
-	
 	public CrawlStart(int threadPoolNum) {
 		if (threadPoolNum < 1) {
 			threadPoolNum = 1;
@@ -49,24 +45,6 @@ public class CrawlStart {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}		
-		
-//		while(!LinkQueue.unVisitedUrlIsEmpty() && LinkQueue.getVisitedUrlNum() < 1){
-//			
-//			String visitUrl = (String) LinkQueue.unVisitedUrlDeQueue();// 获取待访问的URL
-//			if (visitUrl == null) {
-//				continue;
-//			}
-//			System.out.println(i + "==>" + visitUrl);
-//			CrawlLink crawlLink = new CrawlLink(visitUrl);
-//			Set<String> links = crawlLink.crawlAllLink();// 抓取网页中的URL
-//			System.out.println(i + "==>" + visitUrl + "==>抓取的URL数量:" + links.size());
-//			for (String link : links) {// 新的未访问的URL入队列
-//				LinkQueue.addUnVisitedUrl(link);
-//			}
-//			System.out.println(i + "==>URL队列中未访问的数量:" + LinkQueue.getUnVisitedUrl().getSize());
-//			LinkQueue.addVisitedUrl(visitUrl);// 添加已访问URL
-//			i++;
-//		}
 	}
 
 	/**
@@ -74,26 +52,21 @@ public class CrawlStart {
 	 */
 	public static void main(String[] args) {
 		long start = System.currentTimeMillis();
-		// http://eol.zhbit.com/
 		// https://www.zhihu.com/people/stefan-77
-		// https://www.zhihu.com/people/Kirio
-		// https://www.zhihu.com/terms#sec-licence-6  people/shi-yu-52-32
-		CrawlBase base = new CrawlBase();
-		base.login();
-		
 		String url = "https://www.zhihu.com/";
 		int threadPoolNum = 20;
 		String[] seeds = {url};
 		
 		CrawlStart crawlStart = new CrawlStart(threadPoolNum);
-		// 初始化操作
-		crawlStart.init(seeds);
+		crawlStart.init(seeds);// 初始化操作
+		
 		System.out.println("抓取前。。。。。。");
 		System.out.println("已访问：" + LinkQueue.getVisitedUrlNum());
 		System.out.println("未访问：" + LinkQueue.getUnVisitedUrlNum());
 		
 		// 抓取......
 		crawlStart.crawling();
+		
 		System.out.println("抓取后。。。。。。");
 		System.out.println("已访问：" + LinkQueue.getVisitedUrlNum());
 		System.out.println("未访问：" + LinkQueue.getUnVisitedUrlNum());

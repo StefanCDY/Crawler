@@ -55,7 +55,7 @@ public class CrawlLinkThread implements Runnable {
 	
 	public static void main(String[] args) {
 		String url = "https://www.zhihu.com/";
-		CrawlStart start = new CrawlStart();
+//		CrawlStart start = new CrawlStart();
 //		start.initCrawlerWithSeeds(new String[]{url});
 //		CrawlLinkThread thread = new CrawlLinkThread("aa");
 //		thread.start();
