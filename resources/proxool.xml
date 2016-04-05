@@ -21,7 +21,7 @@
 		<!-- 最小连接数(默认2个) -->
 		<minimum-connection-count>10</minimum-connection-count>
 		<!-- 没有空闲连接可以分配而在队列中等候的最大请求数,超过这个请求数的用户连接就不会被接受 -->
-		<maximum-new-connections>20</maximum-new-connections>
+		<simultaneous-build-throttle>20</simultaneous-build-throttle>
 		
 		<simultaneous-build-throttle>10</simultaneous-build-throttle>
 		<test-before-use>true</test-before-use>

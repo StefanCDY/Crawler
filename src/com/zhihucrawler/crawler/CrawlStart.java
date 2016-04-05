@@ -54,7 +54,7 @@ public class CrawlStart {
 		long start = System.currentTimeMillis();
 		// https://www.zhihu.com/people/stefan-77
 		String url = "https://www.zhihu.com/";
-		int threadPoolNum = 20;
+		int threadPoolNum = 5;
 		String[] seeds = {url};
 		
 		CrawlStart crawlStart = new CrawlStart(threadPoolNum);

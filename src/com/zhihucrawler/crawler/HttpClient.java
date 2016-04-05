@@ -49,6 +49,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.ByteArrayBuffer;
 
 import com.zhihucrawler.utils.CharsetUtil;
+import com.zhihucrawler.utils.JsonUtil;
 
 /**
  * @author Stefan
@@ -189,6 +190,7 @@ public class HttpClient {
 		try {
 			String pageSource = this.crawlPage(this.index);
 			String xsrfValue = pageSource.split("<input type=\"hidden\" name=\"_xsrf\" value=\"")[1].split("\"/>")[0];
+			System.out.println("xsrfValue:" + xsrfValue);
 			List<NameValuePair> valuePairs = new LinkedList<NameValuePair>();
 			valuePairs.add(new BasicNameValuePair("email" , this.email));
 			valuePairs.add(new BasicNameValuePair("password" , this.password));
@@ -199,7 +201,9 @@ public class HttpClient {
 			HttpPost post = this.createPostRequest(this.loginAction);
 			post.setEntity(entity);
 			
-			this.getHttpClient().execute(post);// 进行登录
+			CloseableHttpResponse response = this.getHttpClient().execute(post);// 进行登录
+			Header[] responseHeaders = response.getAllHeaders();
+			System.out.println(JsonUtil.parseJson(responseHeaders));
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
