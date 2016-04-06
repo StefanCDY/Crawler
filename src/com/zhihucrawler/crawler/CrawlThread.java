@@ -41,8 +41,11 @@ public class CrawlThread extends Thread {
 			if (visitUrl == null || "".equals(visitUrl)) {
 				continue;
 			}
-			String pageCode = httpClient.crawlPage(visitUrl);
 			
+			String pageCode = httpClient.crawlPage(visitUrl);
+			if(pageCode == null || "".equals(visitUrl)){
+				continue;
+			}
 			Set<String> links = new HashSet<String>();
 			System.out.println(Thread.currentThread().getId() + ":" + Thread.currentThread().getName() + " 正在抓取页面链接:" + visitUrl);
 			links = parserTool.extracLinks(visitUrl, pageCode);
@@ -60,7 +63,7 @@ public class CrawlThread extends Thread {
 				crawlerDB.saveUserInfo(userInfo);
 				System.out.println(JsonUtil.parseJson(userInfo));
 			}
-			Thread.yield();
+//			Thread.yield();
 		}
 	}
 

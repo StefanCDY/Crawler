@@ -39,7 +39,7 @@ public class CrawlStart {
 		
 		try {
 			boolean loop = true;
-			do {// 等待所有任务完成  
+			do {// 等待所有任务完成
 				loop = executorService.awaitTermination(1, TimeUnit.SECONDS);// 阻塞,直到线程池里所有任务结束,每隔1秒监测一次
 			} while (!loop);
 		} catch (InterruptedException e) {
@@ -54,7 +54,7 @@ public class CrawlStart {
 		long start = System.currentTimeMillis();
 		// https://www.zhihu.com/people/stefan-77
 		String url = "https://www.zhihu.com/";
-		int threadPoolNum = 5;
+		int threadPoolNum = 10;
 		String[] seeds = {url};
 		
 		CrawlStart crawlStart = new CrawlStart(threadPoolNum);
