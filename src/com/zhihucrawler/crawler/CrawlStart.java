@@ -34,6 +34,11 @@ public class CrawlStart {
 	public void crawling() {
 		for (int i = 0; i < this.threadPoolNum; i++) {
 			executorService.execute(new CrawlThread("Thread:" + i));
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		executorService.shutdown();// 不能再提交新任务,等待执行的任务不受影响
 		
@@ -44,7 +49,7 @@ public class CrawlStart {
 			} while (!loop);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		}		
+		}
 	}
 
 	/**
@@ -54,7 +59,7 @@ public class CrawlStart {
 		long start = System.currentTimeMillis();
 		// https://www.zhihu.com/people/stefan-77
 		String url = "https://www.zhihu.com/";
-		int threadPoolNum = 10;
+		int threadPoolNum = 1;
 		String[] seeds = {url};
 		
 		CrawlStart crawlStart = new CrawlStart(threadPoolNum);

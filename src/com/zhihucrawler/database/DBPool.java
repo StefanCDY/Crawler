@@ -1,6 +1,5 @@
 package com.zhihucrawler.database;
 
-import com.zhihucrawler.config.Const;
 import com.zhihucrawler.utils.ClassUtil;
 
 /**
@@ -13,11 +12,6 @@ import com.zhihucrawler.utils.ClassUtil;
 public class DBPool {
 	private String poolPath;//数据库连接池的配置文件路径
 
-	private DBPool() {
-		
-	}
-	
-	
 	/**
 	 * @author Stefan
 	 * @version V1.0
@@ -50,7 +44,7 @@ public class DBPool {
 	public String getPoolPath() {
 		if (poolPath == null) {
 			//如果poolPath为空，赋值为默认值
-			poolPath = ClassUtil.getClassRootPath(DBPool.class) + Const.PROXOOL_Path;
+			poolPath = ClassUtil.getClassRootPath(DBPool.class) + "proxool.xml";
 		}
 		return poolPath;
 	}
@@ -65,5 +59,9 @@ public class DBPool {
 	public void setPoolPath(String poolPath) {
 		this.poolPath = poolPath;
 	}
-	
+
+	public static void main(String[] args) {
+		DBPool dbPool = new DBPool();
+		System.out.println(dbPool.getPoolPath());
+	}
 }

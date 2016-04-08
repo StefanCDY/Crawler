@@ -30,7 +30,7 @@ import com.zhihucrawler.database.ZhihuCrawlerDB;
  * @Date 2016-3-21 下午2:57:49
  */
 public class BusinessChart {
-
+	
 	private static CategoryDataset createDataset(List<Object[]> list) {
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		for (Object[] objects : list) {

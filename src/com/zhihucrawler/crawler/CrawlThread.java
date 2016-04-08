@@ -35,15 +35,14 @@ public class CrawlThread extends Thread {
 		ZhihuCrawlerDB crawlerDB = new ZhihuCrawlerDB();
 		HttpClient httpClient = new HttpClient();
 		httpClient.login();
-		while(!LinkQueue.unVisitedUrlIsEmpty() && LinkQueue.getVisitedUrlNum() < 100){
+		while(!LinkQueue.unVisitedUrlIsEmpty() && LinkQueue.getVisitedUrlNum() < 1000){
 			System.out.println(Thread.currentThread().getId() + ":" + Thread.currentThread().getName() + " is crawling.");
 			String visitUrl = (String) LinkQueue.unVisitedUrlDeQueue();// 获取待访问的URL
 			if (visitUrl == null || "".equals(visitUrl)) {
 				continue;
 			}
-			
 			String pageCode = httpClient.crawlPage(visitUrl);
-			if(pageCode == null || "".equals(visitUrl)){
+			if (pageCode == null || "".equals(pageCode)) {
 				continue;
 			}
 			Set<String> links = new HashSet<String>();
@@ -63,7 +62,11 @@ public class CrawlThread extends Thread {
 				crawlerDB.saveUserInfo(userInfo);
 				System.out.println(JsonUtil.parseJson(userInfo));
 			}
-//			Thread.yield();
+//			try {
+//				Thread.sleep(1000);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
 		}
 	}
 

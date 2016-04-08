@@ -61,7 +61,7 @@ import com.zhihucrawler.utils.JsonUtil;
 public class HttpClient {
 	// HttpClient连接参数
 	private final int connectTimeout = 5 * 1000;// 设置连接超时时间,单位毫秒.
-	private final int socketTimeout = 5 * 1000;// 请求获取数据的超时时间,单位毫秒.
+	private final int socketTimeout = 5 * 1000 * 1000;// 请求获取数据的超时时间,单位毫秒.
 	private final int connectionRequestTimeout = 5 * 1000 * 1000;// 设置从ConnectManager获取Connection超时时间,单位毫秒.
 	private final int maxTotal = 200;// 设置最大连接数
 	private final int defaultMaxPerRoute = 200;// 设置每个路由最大连接数
@@ -190,7 +190,7 @@ public class HttpClient {
 		try {
 			String pageSource = this.crawlPage(this.index);
 			String xsrfValue = pageSource.split("<input type=\"hidden\" name=\"_xsrf\" value=\"")[1].split("\"/>")[0];
-			System.out.println("xsrfValue:" + xsrfValue);
+			System.out.println(Thread.currentThread().getName() + "  xsrfValue:" + xsrfValue);
 			List<NameValuePair> valuePairs = new LinkedList<NameValuePair>();
 			valuePairs.add(new BasicNameValuePair("email" , this.email));
 			valuePairs.add(new BasicNameValuePair("password" , this.password));
@@ -203,7 +203,7 @@ public class HttpClient {
 			
 			CloseableHttpResponse response = this.getHttpClient().execute(post);// 进行登录
 			Header[] responseHeaders = response.getAllHeaders();
-			System.out.println(JsonUtil.parseJson(responseHeaders));
+//			System.out.println(JsonUtil.parseJson(responseHeaders));
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -284,5 +284,4 @@ public class HttpClient {
 		}
 		return null;
 	}
-	
 }

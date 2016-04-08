@@ -58,5 +58,5 @@ public class DBPoolManager {
 	public Connection getConnection(String poolName) throws SQLException {
 		return DriverManager.getConnection(poolName);
 	}
-
+	
 }

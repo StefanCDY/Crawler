@@ -7,9 +7,8 @@ import java.net.URLConnection;
 
 import javax.imageio.ImageIO;
 
-import com.zhihucrawler.config.Const;
-
 public class ImageUtil {
+	public static final String savepath = "picture/";//图片默认保存路径
 
 	/**
 	 * @description 从网络上下载图片
@@ -22,7 +21,7 @@ public class ImageUtil {
 			return null;
 		}
 		if(savepath == null || "".equals(savepath)) {
-			savepath = Const.IMAGE_SAVE_PATH;
+			savepath = ImageUtil.savepath;
 		}
 		int hostNum = urlstr.indexOf('/', 8);
 		int num = urlstr.lastIndexOf('/');
