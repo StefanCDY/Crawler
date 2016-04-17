@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.zhihucrawler.utils;
 
 import java.security.MessageDigest;

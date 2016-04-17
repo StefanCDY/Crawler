@@ -5,18 +5,97 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.zhihucrawler.model.CrawlUrl;
 import com.zhihucrawler.model.UserInfo;
 
 public class ZhihuCrawlerDB {
 	private static final String POOLNAME = "proxool.DBPool";
 	
-	/** 
-	 * @author Stefan
-	 * @Title saveUserInfo
-	 * @Description 保存用户信息
-	 * @param userInfo
-	 * @Date 2016-3-19 下午10:56:21
-	 */
+	public CrawlUrl getUrl() {
+		DBServer dbServer = new DBServer(POOLNAME);
+		try {
+			String sql = "select * from url where state = '" + 0 + "' order by rand() limit 1";
+			ResultSet resultSet = dbServer.select(sql);
+			while (resultSet.next()) {
+				CrawlUrl url = new CrawlUrl();
+				url.setAddTime(resultSet.getLong("addTime"));
+				url.setDepth(resultSet.getInt("depth"));
+				url.setId(resultSet.getInt("id"));
+				url.setState(resultSet.getInt("state"));
+				url.setUpdateTime(resultSet.getLong("updateTime"));
+				url.setUrl(resultSet.getString("url"));
+				return url;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			dbServer.close();
+		}
+		return null;
+	}
+	
+	public void saveUrl(CrawlUrl url) {
+		if (url == null || "".equals(url)) {
+			return;
+		}
+		DBServer dbServer = new DBServer(POOLNAME);
+		try {
+			if (!this.hasUrl(url.getUrl())) {// url是否已存在
+				HashMap<Integer, Object> params = new HashMap<Integer, Object>();
+				int i = 1;
+				params.put(i++, url.getUrl());
+				params.put(i++, url.getDepth());
+				params.put(i++, url.getState());
+				params.put(i++, System.currentTimeMillis());
+				params.put(i++, System.currentTimeMillis());
+				String columns = "url,depth,state,addTime,updateTime";
+				dbServer.insert("url", columns, params);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			dbServer.close();
+		}
+	}
+	
+	public void saveUrl(List<CrawlUrl> urlList) {
+		if (urlList == null || urlList.size() < 1) {
+			return;
+		}
+		DBServer dbServer = new DBServer(POOLNAME);
+		try {
+			for (CrawlUrl url : urlList) {
+				if (!this.hasUrl(url.getUrl())) {// url是否已存在
+					HashMap<Integer, Object> params = new HashMap<Integer, Object>();
+					int i = 1;
+					params.put(i++, url.getUrl());
+					params.put(i++, url.getDepth());
+					params.put(i++, url.getState());
+					params.put(i++, System.currentTimeMillis());
+					params.put(i++, System.currentTimeMillis());
+					String columns = "url,depth,state,addTime,updateTime";
+					dbServer.insert("url", columns, params);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			dbServer.close();
+		}
+	}
+	
+	public void updateUrl(long id, int state) {
+		DBServer dbServer = new DBServer(POOLNAME);
+		try {
+			String sql = "update url set `state` = '" + state + "', `updateTime` = '" + System.currentTimeMillis() + "'  where id = '" + id + "'";
+			dbServer.update(sql);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			dbServer.close();
+		}		
+	}
+	
 	public void saveUserInfo(UserInfo userInfo) {
 		if (userInfo == null) {
 			return;
@@ -25,7 +104,6 @@ public class ZhihuCrawlerDB {
 		try {
 			HashMap<Integer, Object> params = new HashMap<Integer, Object>();
 			int i = 1;
-			params.put(i++, userInfo.getId());
 			params.put(i++, userInfo.getUrl());
 			params.put(i++, userInfo.getName());
 			params.put(i++, userInfo.getGender());
@@ -54,7 +132,7 @@ public class ZhihuCrawlerDB {
 			params.put(i++, 1);
 			params.put(i++, System.currentTimeMillis());
 			params.put(i++, System.currentTimeMillis());
-			String columns = "id,url,name,gender,headline,description,headimage,weibo,location,business,employment,position,education,major,agree,thanks,asks,answers,posts,collections,logs,followees,followers,followed,topics,pv,state,createtime,updatetime";
+			String columns = "url,name,gender,headline,description,headimage,weibo,location,business,employment,position,education,major,agree,thanks,asks,answers,posts,collections,logs,followees,followers,followed,topics,pv,state,createtime,updatetime";
 			dbServer.insert("userinfo", columns, params);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -62,14 +140,7 @@ public class ZhihuCrawlerDB {
 			dbServer.close();
 		}
 	}
-
-	/** 
-	 * @author Stefan
-	 * @Title updateNovelInfo
-	 * @Description 更新用户信息
-	 * @param userInfo
-	 * @Date 2016-3-22 下午5:53:57
-	 */
+	
 	public void updateUserInfo(UserInfo userInfo) {
 		if (userInfo == null) {
 			return;
@@ -113,85 +184,68 @@ public class ZhihuCrawlerDB {
 			dbServer.close();
 		}
 	}
+	
+//	public UserInfo getUserInfo(String id) {
+//		DBServer dbServer = new DBServer(POOLNAME);
+//		UserInfo userInfo = new UserInfo();
+//		try {
+//			String sql = "select * from userinfo where id = '" + id + "' limit 1";
+//			ResultSet resultSet = dbServer.select(sql);
+//			while (resultSet.next()) {
+//				userInfo.setId(resultSet.getString("id"));
+//				userInfo.setName(resultSet.getString("name"));
+//				userInfo.setUrl(resultSet.getString("url"));
+//				userInfo.setAgree(resultSet.getInt("agree"));
+//				userInfo.setAnswers(resultSet.getInt("answers"));
+//				userInfo.setAsks(resultSet.getInt("asks"));
+//				userInfo.setBusiness(resultSet.getString("business"));
+//				userInfo.setCollections(resultSet.getInt("collections"));
+//				userInfo.setDescription(resultSet.getString("description"));
+//				userInfo.setEducation(resultSet.getString("education"));
+//				userInfo.setEmployment(resultSet.getString("employment"));
+//				userInfo.setFollowed(resultSet.getInt("followed"));
+//				userInfo.setFollowees(resultSet.getInt("followees"));
+//				userInfo.setFollowers(resultSet.getInt("followers"));
+//				userInfo.setGender(resultSet.getString("gender"));
+//				userInfo.setHeadimage(resultSet.getString("headimage"));
+//				userInfo.setLocation(resultSet.getString("location"));
+//				userInfo.setLogs(resultSet.getInt("logs"));
+//				userInfo.setMajor(resultSet.getString("major"));
+//				userInfo.setPosition(resultSet.getString("position"));
+//				userInfo.setPosts(resultSet.getInt("posts"));
+//				userInfo.setPv(resultSet.getInt("pv"));
+//				userInfo.setThanks(resultSet.getInt("thanks"));
+//				userInfo.setTopics(resultSet.getInt("topics"));
+//				userInfo.setWeibo(resultSet.getString("weibo"));
+//				userInfo.setState(resultSet.getInt("state"));
+//				userInfo.setCreatetime(resultSet.getLong("createtime"));
+//				userInfo.setUpdatetime(resultSet.getLong("updatetime"));
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		} finally {
+//			dbServer.close();
+//		}
+//		return userInfo;
+//	}
+//	
+//	public boolean hasUserInfo(String id) {
+//		DBServer dbServer = new DBServer(POOLNAME);
+//		try {
+//			String sql = "select sum(1) as count from userinfo where id = '" + id + "'";
+//			ResultSet resultSet = dbServer.select(sql);
+//			if (resultSet.next()) {
+//				int count = resultSet.getInt("count");
+//				return count > 0;
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		} finally {
+//			dbServer.close();
+//		}
+//		return false;
+//	}
 
-	public UserInfo getUserInfo(String id) {
-		DBServer dbServer = new DBServer(POOLNAME);
-		UserInfo userInfo = new UserInfo();
-		try {
-			String sql = "select * from userinfo where id = '" + id + "' limit 1";
-			ResultSet resultSet = dbServer.select(sql);
-			while (resultSet.next()) {
-				userInfo.setId(resultSet.getString("id"));
-				userInfo.setName(resultSet.getString("name"));
-				userInfo.setUrl(resultSet.getString("url"));
-				userInfo.setAgree(resultSet.getInt("agree"));
-				userInfo.setAnswers(resultSet.getInt("answers"));
-				userInfo.setAsks(resultSet.getInt("asks"));
-				userInfo.setBusiness(resultSet.getString("business"));
-				userInfo.setCollections(resultSet.getInt("collections"));
-				userInfo.setDescription(resultSet.getString("description"));
-				userInfo.setEducation(resultSet.getString("education"));
-				userInfo.setEmployment(resultSet.getString("employment"));
-				userInfo.setFollowed(resultSet.getInt("followed"));
-				userInfo.setFollowees(resultSet.getInt("followees"));
-				userInfo.setFollowers(resultSet.getInt("followers"));
-				userInfo.setGender(resultSet.getString("gender"));
-				userInfo.setHeadimage(resultSet.getString("headimage"));
-				userInfo.setLocation(resultSet.getString("location"));
-				userInfo.setLogs(resultSet.getInt("logs"));
-				userInfo.setMajor(resultSet.getString("major"));
-				userInfo.setPosition(resultSet.getString("position"));
-				userInfo.setPosts(resultSet.getInt("posts"));
-				userInfo.setPv(resultSet.getInt("pv"));
-				userInfo.setThanks(resultSet.getInt("thanks"));
-				userInfo.setTopics(resultSet.getInt("topics"));
-				userInfo.setWeibo(resultSet.getString("weibo"));
-				userInfo.setState(resultSet.getInt("state"));
-				userInfo.setCreatetime(resultSet.getLong("createtime"));
-				userInfo.setUpdatetime(resultSet.getLong("updatetime"));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			dbServer.close();
-		}
-		return userInfo;
-	}
-	
-	/** 
-	 * @author Stefan
-	 * @Title hasUserInfo
-	 * @Description 是否已存在用户信息
-	 * @param id
-	 * @return boolean
-	 * @Date 2016-3-22 下午4:55:28
-	 */
-	public boolean hasUserInfo(String id) {
-		DBServer dbServer = new DBServer(POOLNAME);
-		try {
-			String sql = "select sum(1) as count from userinfo where id = '" + id + "'";
-			ResultSet resultSet = dbServer.select(sql);
-			if (resultSet.next()) {
-				int count = resultSet.getInt("count");
-				return count > 0;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			dbServer.close();
-		}
-		return false;
-	}
-	
-	
-	
-	/** 
-	 * @author Stefan
-	 * @Title countGender
-	 * @Description 性别分布
-	 * @return List<Object[]>
-	 * @Date 2016-3-21 下午2:40:12
-	 */
 	public List<Object[]> countGenderRatio() {
 		DBServer dbServer = new DBServer(POOLNAME);
 		List<Object[]> list = new ArrayList<Object[]>();
@@ -212,13 +266,6 @@ public class ZhihuCrawlerDB {
 		return list;
 	}
 	
-	/** 
-	 * @author Stefan
-	 * @Title countLocationRatio
-	 * @Description 地区分布
-	 * @return List<Object[]>
-	 * @Date 2016-3-21 下午2:54:39
-	 */
 	public List<Object[]> countLocationRatio() {
 		DBServer dbServer = new DBServer(POOLNAME);
 		List<Object[]> list = new ArrayList<Object[]>();
@@ -239,13 +286,6 @@ public class ZhihuCrawlerDB {
 		return list;
 	}
 	
-	/** 
-	 * @author Stefan
-	 * @Title countBusinessRatio
-	 * @Description 职业分布
-	 * @return
-	 * @Date 2016-3-21 下午4:45:51
-	 */
 	public List<Object[]> countBusinessRatio() {
 		DBServer dbServer = new DBServer(POOLNAME);
 		List<Object[]> list = new ArrayList<Object[]>();
@@ -266,13 +306,6 @@ public class ZhihuCrawlerDB {
 		return list;
 	}
 	
-	/** 
-	 * @author Stefan
-	 * @Title countEducationRatio
-	 * @Description 院校分布
-	 * @return
-	 * @Date 2016-3-21 下午4:55:10
-	 */
 	public List<Object[]> countEducationRatio() {
 		DBServer dbServer = new DBServer(POOLNAME);
 		List<Object[]> list = new ArrayList<Object[]>();
@@ -293,13 +326,6 @@ public class ZhihuCrawlerDB {
 		return list;
 	}
 	
-	/** 
-	 * @author Stefan
-	 * @Title countMajorRatio
-	 * @Description 专业分布
-	 * @return
-	 * @Date 2016-3-21 下午5:06:07
-	 */
 	public List<Object[]> countMajorRatio() {
 		DBServer dbServer = new DBServer(POOLNAME);
 		List<Object[]> list = new ArrayList<Object[]>();
@@ -339,5 +365,44 @@ public class ZhihuCrawlerDB {
 		}
 		return list;
 	}
+
+
+	
+	public long getVisitedUrlNum() {
+		DBServer dbServer = new DBServer(POOLNAME);
+		try {
+			String sql = "select count(1) as count from url where state = 1";
+			ResultSet resultSet = dbServer.select(sql);
+			if (resultSet.next()) {
+				int count = resultSet.getInt("count");
+				return count;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			dbServer.close();
+		}
+		return 0;
+	}
+	
+	private boolean hasUrl(String url) {
+		DBServer dbServer = new DBServer(POOLNAME);
+		try {
+			String sql = "select sum(1) as count from url where url = '" + url + "'";
+			ResultSet resultSet = dbServer.select(sql);
+			if (resultSet.next()) {
+				int count = resultSet.getInt("count");
+				return count > 0;
+			}
+			return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			dbServer.close();
+		}
+		return false;
+	}
+
+
 	
 }

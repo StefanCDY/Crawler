@@ -1,6 +1,8 @@
 package com.zhihucrawler.parser;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.htmlparser.NodeFilter;
@@ -13,8 +15,8 @@ import org.htmlparser.tags.LinkTag;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
 
+import com.zhihucrawler.model.CrawlUrl;
 import com.zhihucrawler.model.UserInfo;
-import com.zhihucrawler.utils.EncryptUtil;
 import com.zhihucrawler.utils.RegexUtil;
 
 public class HtmlParserTool {
@@ -26,8 +28,39 @@ public class HtmlParserTool {
 		this.charset = charset;
 	}
 	
-	public Set<String> extracLinks(String url, String html) {
-		Set<String> links = new HashSet<String>();
+	public List<CrawlUrl> extracLinks(CrawlUrl purl, String html) {
+		List<CrawlUrl> urlList = new ArrayList<CrawlUrl>();
+		try {
+			Parser parser = Parser.createParser(html, this.charset);
+			NodeFilter filter = new NodeClassFilter(LinkTag.class);
+			NodeList nodeList  = parser.extractAllNodesThatMatch(filter);
+			
+			for (int i = 0; i < nodeList.size(); i++) {
+				LinkTag linkTag = (LinkTag) nodeList.elementAt(i);
+				String link = RegexUtil.getHttpUrl(linkTag.getLink(), purl.getUrl());
+				if (!link.startsWith(this.validateUrl)) {
+					continue;
+				}
+				int index = link.indexOf("#");
+				if (index != -1) {// 含有"#"
+					link = link.substring(0, index);
+				}
+				CrawlUrl url = new CrawlUrl();
+				url.setUrl(link);
+				url.setDepth(purl.getDepth() + 1);
+				url.setState(0);
+				url.setAddTime(System.currentTimeMillis());
+				url.setUpdateTime(System.currentTimeMillis());
+				urlList.add(url);
+			}
+		} catch (ParserException e) {
+			e.printStackTrace();
+		}
+		return urlList;
+	}
+	
+	public List<String> extracLinks(String url, String html) {
+		List<String> links = new ArrayList<String>();
 		try {
 			Parser parser = Parser.createParser(html, this.charset);
 			NodeFilter filter = new NodeClassFilter(LinkTag.class);
@@ -53,7 +86,6 @@ public class HtmlParserTool {
 	
 	public UserInfo parserUserInfo(String url, String html) {
 		UserInfo userinfo = new UserInfo();
-		userinfo.setId(EncryptUtil.parseStrToMD5(url));
 		userinfo.setUrl(url);
 		try {
 			// zm-profile-header-main
@@ -165,7 +197,6 @@ public class HtmlParserTool {
 				description = description.substring(0, 250) + "...";
 			}
 			return description;
-//			return nodeList.elementAt(0).toPlainTextString().trim();
 		}
 		return null;
 	}

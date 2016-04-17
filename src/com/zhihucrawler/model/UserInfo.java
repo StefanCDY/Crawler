@@ -18,14 +18,12 @@ import org.hibernate.annotations.GenericGenerator;
  * @Date 2016-3-17 下午1:14:57
  */
 @Entity
-@Table(name = "userinfo",schema="zhihucrawler")
+@Table(name = "userinfo")
 public class UserInfo implements Serializable {
 
-	// Fields
+	private static final long serialVersionUID = 8719642254588262305L;
 
-	public static final long serialVersionUID = 1L;
-
-	public String id;
+	public long id;
 	public String url;
 	public String name;
 	public String gender;
@@ -55,32 +53,22 @@ public class UserInfo implements Serializable {
     public long updatetime;
     public int state;
 
-	// Constructors
-
-	/** default constructor */
 	public UserInfo() {
-	}
-
-	/** minimal constructor */
-	public UserInfo(String url, String name, String gender) {
-		this.url = url;
-		this.name = name;
-		this.gender = gender;
+		super();
 	}
 
 	@Id
-	@GeneratedValue(generator="id")
-	@GenericGenerator(name="id", strategy="assigned")/*手动主键*/
-	@Column(name = "id", length = 32, unique = true, nullable = false)
-	public String getId() {
+	@GeneratedValue
+	@Column(name = "id", unique = true, nullable = false)
+	public long getId() {
 		return this.id;
 	}
 
-	public void setId(String id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 
-	@Column(name = "url", nullable = false)
+	@Column(name = "url", nullable = false, unique = true)
 	public String getUrl() {
 		return this.url;
 	}
@@ -330,6 +318,23 @@ public class UserInfo implements Serializable {
 
 	public void setState(int state) {
 		this.state = state;
+	}
+
+	@Override
+	public String toString() {
+		return "UserInfo [id=" + id + ", url=" + url + ", name=" + name
+				+ ", gender=" + gender + ", headline=" + headline
+				+ ", description=" + description + ", location=" + location
+				+ ", business=" + business + ", employment=" + employment
+				+ ", position=" + position + ", education=" + education
+				+ ", major=" + major + ", headimage=" + headimage + ", weibo="
+				+ weibo + ", agree=" + agree + ", thanks=" + thanks + ", asks="
+				+ asks + ", answers=" + answers + ", posts=" + posts
+				+ ", collections=" + collections + ", logs=" + logs
+				+ ", followees=" + followees + ", followers=" + followers
+				+ ", topics=" + topics + ", followed=" + followed + ", pv="
+				+ pv + ", createtime=" + createtime + ", updatetime="
+				+ updatetime + ", state=" + state + "]";
 	}
 
 }

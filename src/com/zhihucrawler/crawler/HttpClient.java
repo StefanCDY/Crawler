@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.net.ProxySelector;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -11,6 +12,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.SSLException;
@@ -18,9 +21,12 @@ import javax.net.ssl.SSLHandshakeException;
 
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.NoHttpResponseException;
@@ -36,6 +42,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
@@ -43,13 +50,19 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
+import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.ByteArrayBuffer;
 
+import com.zhihucrawler.model.CrawlUrl;
+import com.zhihucrawler.parser.HtmlParserTool;
 import com.zhihucrawler.utils.CharsetUtil;
-import com.zhihucrawler.utils.JsonUtil;
 
 /**
  * @author Stefan
@@ -59,6 +72,7 @@ import com.zhihucrawler.utils.JsonUtil;
  * @Date 2016-4-4 下午9:45:00
  */
 public class HttpClient {
+	
 	// HttpClient连接参数
 	private final int connectTimeout = 5 * 1000;// 设置连接超时时间,单位毫秒.
 	private final int socketTimeout = 5 * 1000 * 1000;// 请求获取数据的超时时间,单位毫秒.
@@ -77,6 +91,7 @@ public class HttpClient {
 	private CloseableHttpClient httpClient = null;// 客户端
 	
 	public HttpClient() {
+		
 		this.initHttpClient();
 		
 		this.headerParams = new HashMap<String, String>();
@@ -86,6 +101,8 @@ public class HttpClient {
 		this.headerParams.put("Connection", "keep-alive");
 		this.headerParams.put("Host", "www.zhihu.com");
 		this.headerParams.put("Referer", "https://www.zhihu.com/");
+		this.headerParams.put("pragma", "no-cache");
+		this.headerParams.put("cache-control", "no-cache");
 		this.headerParams.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0");
 	}
 	
@@ -105,17 +122,21 @@ public class HttpClient {
 	}
 	
 	private void initHttpClient() {
-		// 注册连接套接字工厂
+		
+		// 创建通用Socket工厂
 		ConnectionSocketFactory plainsf = PlainConnectionSocketFactory.getSocketFactory();
+		// 创建SSL Socket工厂
 		LayeredConnectionSocketFactory sslsf = SSLConnectionSocketFactory.getSocketFactory();
-		Registry<ConnectionSocketFactory> registry = RegistryBuilder
-				.<ConnectionSocketFactory> create().register("http", plainsf)
-				.register("https", sslsf).build();
+		// 自定义的Socket工厂类,可以和指定的协议（Http,Https）联系起来,用来创建自定义的连接管理器.
+		Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
+				.register("http", plainsf)
+				.register("https", sslsf)
+				.build();
 		
 		// 连接池管理器
 		PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(registry);
-		connectionManager.setMaxTotal(this.maxTotal);
-		connectionManager.setDefaultMaxPerRoute(this.defaultMaxPerRoute);
+		connectionManager.setMaxTotal(this.maxTotal);// 默认最大连接数为20
+		connectionManager.setDefaultMaxPerRoute(this.defaultMaxPerRoute);// 默认每个路由基础的连接为2
 		
 		// 请求重试处理
 		HttpRequestRetryHandler requestRetryHandler = new HttpRequestRetryHandler() {
@@ -149,19 +170,56 @@ public class HttpClient {
 	            }
 				return false;
 			}
+			
 		};
 		
-//		LaxRedirectStrategy redirectStrategy = new LaxRedirectStrategy();// 声明重定向策略对象
+		// 声明重定向策略对象
+		@SuppressWarnings("unused")
+		LaxRedirectStrategy redirectStrategy = new LaxRedirectStrategy();
+		
+		// 声明长连接策略
+		@SuppressWarnings("unused")
+		ConnectionKeepAliveStrategy keepAliveStrategy = new ConnectionKeepAliveStrategy() {
+			
+			@Override
+			public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+				
+				// 遍历Response的Header
+				HeaderElementIterator iterator = new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+				while (iterator.hasNext()) {
+					HeaderElement element = iterator.nextElement();
+					String param = element.getName();
+					String value = element.getValue();
+					if (value != null && param.equalsIgnoreCase("Timeout")) {//如果头部包含timeout信息,则使用
+						// 超时时间设置为服务器指定的值
+						return Long.parseLong(value) * 1000;
+					}
+				}
+				return 0;
+			}
+		};
+		
+		// 声明代理服务器
+		String ip = "127.0.0.1";
+		int port = 8080;
+		HttpHost proxy = new HttpHost(ip, port);
+		@SuppressWarnings("unused")
+		DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);// 使用默认的代理服务器
+		@SuppressWarnings("unused")
+		SystemDefaultRoutePlanner jreRoutePlanner = new SystemDefaultRoutePlanner(ProxySelector.getDefault());// 使用jre的代理服务器
 		
 		this.httpClient = HttpClients.custom()
 				.setConnectionManager(connectionManager)
 				.setRetryHandler(requestRetryHandler)
+				.setDefaultRequestConfig(this.getRequestConfig())
 //				.setRedirectStrategy(redirectStrategy)
-				.setDefaultRequestConfig(this.getRequestConfig()).build();
-		
+//				.setKeepAliveStrategy(keepAliveStrategy)
+//				.setRoutePlanner(routePlanner)
+				.build();
 	}
 	
 	private HttpGet createGetRequest(String url) {
+		url= url.replaceAll(" ", "%20");
 		HttpGet request = new HttpGet(url);
 		if (headerParams != null) {
 			Iterator<Entry<String, String>> iterator = headerParams.entrySet().iterator();
@@ -174,6 +232,7 @@ public class HttpClient {
 	}
 	
 	private HttpPost createPostRequest(String url) {
+		url= url.replaceAll(" ", "%20");
 		HttpPost request = new HttpPost(url);
 		request.setConfig(getRequestConfig());
 		if (headerParams != null) {
@@ -188,9 +247,10 @@ public class HttpClient {
 	
 	public void login() {
 		try {
-			String pageSource = this.crawlPage(this.index);
-			String xsrfValue = pageSource.split("<input type=\"hidden\" name=\"_xsrf\" value=\"")[1].split("\"/>")[0];
-			System.out.println(Thread.currentThread().getName() + "  xsrfValue:" + xsrfValue);
+			String pageCode = this.crawlPage(this.index);
+			String xsrfValue = pageCode.split("<input type=\"hidden\" name=\"_xsrf\" value=\"")[1].split("\"/>")[0];
+//			System.out.println(Thread.currentThread().getName() + "  xsrfValue:" + xsrfValue);
+			
 			List<NameValuePair> valuePairs = new LinkedList<NameValuePair>();
 			valuePairs.add(new BasicNameValuePair("email" , this.email));
 			valuePairs.add(new BasicNameValuePair("password" , this.password));
@@ -201,9 +261,11 @@ public class HttpClient {
 			HttpPost post = this.createPostRequest(this.loginAction);
 			post.setEntity(entity);
 			
-			CloseableHttpResponse response = this.getHttpClient().execute(post);// 进行登录
-			Header[] responseHeaders = response.getAllHeaders();
-//			System.out.println(JsonUtil.parseJson(responseHeaders));
+			CloseableHttpResponse  httpResponse = this.getHttpClient().execute(post, HttpClientContext.create());// 进行登录;
+			for (Header header : httpResponse.getAllHeaders()) {
+				System.out.println(header.getName() + ":" + header.getValue());
+			}
+			
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -216,7 +278,7 @@ public class HttpClient {
 		HttpGet request = this.createGetRequest(url);
 		CloseableHttpResponse response = null;
 		try {
-			response = httpClient.execute(request);
+			response = httpClient.execute(request, HttpClientContext.create());
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) { 
 				HttpEntity httpEntity = response.getEntity();// 获得响应实体
@@ -260,14 +322,20 @@ public class HttpClient {
 				if (charset == null || "".equals(charset) || "null".equals(charset)) {
 					charset = CharsetUtil.getStreamCharset(new ByteArrayInputStream(buffer.toByteArray()), this.charset);
 				}
-				return new String(buffer.toByteArray(), charset);
+				String pageCode = new String(buffer.toByteArray(), charset);
+				return pageCode;
 			} else if ((statusCode == HttpStatus.SC_MOVED_PERMANENTLY) || (statusCode == HttpStatus.SC_MOVED_TEMPORARILY) || (statusCode == HttpStatus.SC_SEE_OTHER) || (statusCode == HttpStatus.SC_TEMPORARY_REDIRECT)) {
 				Header location = response.getFirstHeader("Location");
 				String redirectUrl = location.getValue();
 				System.out.println(url + "==>请求状态码:" + statusCode + "===重定向url:" + redirectUrl);
+//			} else if (statusCode == 429) {
+//				System.out.println(url + "==>请求状态码:" + statusCode);
+//				for (Header header : response.getAllHeaders()) {
+//					System.out.println(header.getName() + ":" + header.getValue());
+//				}
 			} else {
 				System.out.println(url + "==>请求状态码:" + statusCode);
-			}
+			} 
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -284,4 +352,11 @@ public class HttpClient {
 		}
 		return null;
 	}
+	
+	public static void main(String[] args) {
+		HttpClient httpClient = new HttpClient();
+		httpClient.login();
+		System.out.println(httpClient.crawlPage("https://www.zhihu.com/"));
+	}
+	
 }
