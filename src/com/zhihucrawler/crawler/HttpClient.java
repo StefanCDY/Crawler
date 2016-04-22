@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,9 +20,11 @@ import java.util.zip.GZIPInputStream;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
+import org.apache.http.Consts;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
+import org.apache.http.HeaderIterator;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
@@ -59,6 +62,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.ByteArrayBuffer;
+import org.apache.http.util.EntityUtils;
 
 import com.zhihucrawler.model.CrawlUrl;
 import com.zhihucrawler.parser.HtmlParserTool;
@@ -80,9 +84,12 @@ public class HttpClient {
 	private final int maxTotal = 200;// 设置最大连接数
 	private final int defaultMaxPerRoute = 200;// 设置每个路由最大连接数
 	
+	public static Map<String,String> cookieMap = new HashMap<String, String>(64);
+	
 	// 登录信息
 	private final String email = "848902343@qq.com";// 用户名
 	private final String password = "cdy848902343";// 密码
+	private final String captcha = "";
 	private final String index = "http://www.zhihu.com/";// 知乎首页
 	private final String loginAction = "http://www.zhihu.com/login/email";// 知乎登录跳转地址
 	private final String charset = "UTF-8";// 网页默认编码方式
@@ -103,6 +110,7 @@ public class HttpClient {
 		this.headerParams.put("Referer", "https://www.zhihu.com/");
 		this.headerParams.put("pragma", "no-cache");
 		this.headerParams.put("cache-control", "no-cache");
+		this.headerParams.put("Cookie", "udid=\"ACDAUOormQmPTrOy3T97S-p3qpOy1GpB8FA=|1457677990\"; _za=f930075c-8fbd-41c3-8de9-dc7831f9bfa5; _zap=5b99d5e9-9397-44d8-80e5-373dcc2f5ec4; _xsrf=f07d49ec27142c77fad002544a00c91e; q_c1=964e7cce754c4c159aff1cb5e5eb8520|1460532402000|1460532402000; d_c0=\"AEAAQHh3owmPTt6M2WGn1XoIFIXw_9yNqVE=|1461079198\"; l_n_c=1; l_cap_id=\"OGE1NzQ1MGEyYjYwNDMyNWExNWRkNjkxZTRiZjNiZWI=|1461133245|a2554ecbbd1489a321df7058c37ca5b27bcc26ac\"; cap_id=\"NWEzZmY5ODMzOTRkNDRjZGI1NmIwMTRjZDVhZjBhNzQ=|1461133245|77276bf8154b94e535cb6836bb1ddf36e231f546\"; __utmt=1; __utma=51854390.2024104712.1461080468.1461124306.1461132119.3; __utmb=51854390.8.10.1461132119; __utmc=51854390; __utmz=51854390.1461132119.3.3.utmcsr=hao123.com|utmccn=(referral)|utmcmd=referral|utmcct=/link/https/; __utmv=51854390.000--|2=registration_date=20160214=1^3=entry_date=20160413=1; login=\"NWI4YTAxMzk4Y2U3NDNkNjk3OGYwZDhjMjAyZDcxMDg=|1461133721|f96ba581aa9a56ffcda8450f51e3dc120570bea9\"; z_c0=\"QUJES0dUa2Zkd2tYQUFBQVlRSlZUWm11UGxmbkRiaUNqallFUHA0YUMwMnJiWHdLQVlKTWdnPT0=|1461133721|fd45274f214bd2f472c7e3b7e9f2badcc217171c\"; unlock_ticket=\"QUJES0dUa2Zkd2tYQUFBQVlRSlZUYUVvRjFlSjZ0UmZsUGt5S3g0NEJtMi1OcXY0UlpUdXJRPT0=|1461133721|c03fb5e367ae7fc8f23219499f9a706c00fcc170\"");
 		this.headerParams.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0");
 	}
 	
@@ -127,7 +135,7 @@ public class HttpClient {
 		ConnectionSocketFactory plainsf = PlainConnectionSocketFactory.getSocketFactory();
 		// 创建SSL Socket工厂
 		LayeredConnectionSocketFactory sslsf = SSLConnectionSocketFactory.getSocketFactory();
-		// 自定义的Socket工厂类,可以和指定的协议（Http,Https）联系起来,用来创建自定义的连接管理器.
+		// 自定义的Socket工厂类,可以和指定的协议(Http,Https)联系起来,用来创建自定义的连接管理器.
 		Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
 				.register("http", plainsf)
 				.register("https", sslsf)
@@ -247,30 +255,75 @@ public class HttpClient {
 	
 	public void login() {
 		try {
-			String pageCode = this.crawlPage(this.index);
-			String xsrfValue = pageCode.split("<input type=\"hidden\" name=\"_xsrf\" value=\"")[1].split("\"/>")[0];
-//			System.out.println(Thread.currentThread().getName() + "  xsrfValue:" + xsrfValue);
+			// 创建一个get请求用来接收_xsrf信息  
+			HttpGet get = new HttpGet("http://www.zhihu.com/");  
+			//获取_xsrf  
+			CloseableHttpResponse response = httpClient.execute(get);
+			String pageCode = EntityUtils.toString(response.getEntity());
+			String xsrfValue = pageCode.split("<input type=\"hidden\" name=\"_xsrf\" value=\"")[1].split("\"/>")[0];  
+			System.out.println("xsrfValue:" + xsrfValue);  
+			response.close();
 			
+			// 构造post数据
 			List<NameValuePair> valuePairs = new LinkedList<NameValuePair>();
+			valuePairs.add(new BasicNameValuePair("_xsrf" , xsrfValue));
 			valuePairs.add(new BasicNameValuePair("email" , this.email));
 			valuePairs.add(new BasicNameValuePair("password" , this.password));
 			valuePairs.add(new BasicNameValuePair("remember_me" , "true"));
-			valuePairs.add(new BasicNameValuePair("_xsrf" , xsrfValue));
-			UrlEncodedFormEntity entity = new UrlEncodedFormEntity(valuePairs, "UTF-8");
+//			valuePairs.add(new BasicNameValuePair("captcha" , "nexp"));
+			UrlEncodedFormEntity entity = new UrlEncodedFormEntity(valuePairs, Consts.UTF_8);
 			
-			HttpPost post = this.createPostRequest(this.loginAction);
+			// 创建一个post请求  
+			HttpPost post = new HttpPost("http://www.zhihu.com/login/eamil");
+//			post.setHeader("Cookie", " cap_id=\"MjhhMzI3NWI4NjQyNDM4MTg4NzQ2ZDFmN2RhZmE2ZjU=|1461132161|1a6d9e0d60bfaef3b146a933ae277414c78ab291\"; ");
+          
+			// 注入post数据  
 			post.setEntity(entity);
+			HttpResponse httpResponse = httpClient.execute(post);
 			
-			CloseableHttpResponse  httpResponse = this.getHttpClient().execute(post, HttpClientContext.create());// 进行登录;
-			for (Header header : httpResponse.getAllHeaders()) {
-				System.out.println(header.getName() + ":" + header.getValue());
-			}
-			
+			//构造一个get请求，用来测试登录cookie是否拿到  
+			HttpGet g = new HttpGet("http://www.zhihu.com/question/following");  
+			CloseableHttpResponse r = httpClient.execute(g);  
+			String content = EntityUtils.toString(r.getEntity());  
+			System.out.println(content);  
+			r.close(); 
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	// 从响应信息中获取cookie  
+	public static String setCookie(HttpResponse httpResponse) {
+		System.out.println("----setCookieStore");
+		Header headers[] = httpResponse.getHeaders("Set-Cookie");
+		if (headers == null || headers.length == 0) {
+			System.out.println("----there are no cookies");
+			return null;
+		}
+		String cookie = "";
+		for (int i = 0; i < headers.length; i++) {
+			cookie += headers[i].getValue();
+			if (i != headers.length - 1) {
+				cookie += ";";
+			}
+		}
+
+		String cookies[] = cookie.split(";");
+		for (String c : cookies) {
+			c = c.trim();
+			if (cookieMap.containsKey(c.split("=")[0])) {
+				cookieMap.remove(c.split("=")[0]);
+			}
+			cookieMap.put(c.split("=")[0], c.split("=").length == 1 ? "" : (c.split("=").length == 2 ? c.split("=")[1] : c.split("=", 2)[1]));
+		}
+		System.out.println("----setCookieStore success");
+		String cookiesTmp = "";
+		for (String key : cookieMap.keySet()) {
+			cookiesTmp += key + "=" + cookieMap.get(key) + ";";
+		}
+		return cookiesTmp.substring(0, cookiesTmp.length() - 2);
 	}
 	
 	public String crawlPage(String url) {
@@ -355,7 +408,7 @@ public class HttpClient {
 	
 	public static void main(String[] args) {
 		HttpClient httpClient = new HttpClient();
-		httpClient.login();
+//		httpClient.login();
 		System.out.println(httpClient.crawlPage("https://www.zhihu.com/"));
 	}
 	

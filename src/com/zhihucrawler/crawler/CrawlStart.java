@@ -69,6 +69,7 @@ public class CrawlStart {
 	
 	public void crawling() {
 		for (int i = 0; i < this.threadPoolNum; i++) {
+//			new CrawlThread().start();
 			executorService.execute(new CrawlThread());
 			try {
 				Thread.sleep(1000);

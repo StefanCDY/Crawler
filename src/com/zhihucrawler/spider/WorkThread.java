@@ -3,9 +3,6 @@ package com.zhihucrawler.spider;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.http.client.methods.HttpGet;
-
-import com.zhihucrawler.crawler.HttpClient;
 import com.zhihucrawler.model.UserInfo;
 import com.zhihucrawler.parser.HtmlParserTool;
 
@@ -20,35 +17,34 @@ public class WorkThread implements Runnable {
 	
 	private final String charset = "UTF-8";// 网页解析默认编码方式
 	private final String peopleUrl = "https://www.zhihu.com/people/";// 用户主页
-    private final HttpClient httpClient;
-    private CountDownLatch countDownLatch;
+	private CountDownLatch countDownLatch;
+	private HttpClientTool clientTool;
 
-	public WorkThread(HttpClient httpClient, CountDownLatch countDownLatch) {
-		this.httpClient = httpClient;
-		this.countDownLatch = countDownLatch;
+	public WorkThread(HttpClientTool clientTool, CountDownLatch countDownLatch) {
+         this.countDownLatch = countDownLatch;
+         this.clientTool = clientTool;
 	}
 
 	@Override
 	public void run() {
-//		System.out.println(Thread.currentThread().getName() + " is running.");		
+//		System.out.println(Thread.currentThread().getName() + " is running.");
+//		HttpClientTool clientTool = new HttpClientTool();
 		HtmlParserTool parserTool = new HtmlParserTool(charset);
-		while (!LinkQueue.isEmpty() && LinkQueue.getVisitedNum() < 5) {
-			System.out.println(Thread.currentThread().getName() + " is crawling.");
+		while (!LinkQueue.isEmpty() && LinkQueue.getVisitedNum() < 100) {
+//			System.out.println(Thread.currentThread().getName() + " is crawling.");
 			// 获取待访问的URL
 			String url = (String) LinkQueue.getWaitUrl();
 			if (url == null || "".equals(url)) {
 				continue;
 			}
 			
-//			System.out.println(Thread.currentThread().getName() + " : " + url);
+			System.out.println(Thread.currentThread().getName() + " : " + url);
 			
 			// 抓取网页信息
-			String pageCode = httpClient.crawlPage(url);
+			String pageCode = clientTool.crawlPage(url);
 			if (pageCode == null || "".equals(pageCode)) {
 				continue;
 			}
-			
-			System.out.println(Thread.currentThread().getName() + " : " + pageCode);
 			
 			// 提取页面链接
 			List<String> links = parserTool.extracLinks(url, pageCode);
@@ -57,21 +53,22 @@ public class WorkThread implements Runnable {
 					LinkQueue.addWaitUrl(link);
 				}
 			}
-			System.out.println(Thread.currentThread().getName() + " : " + links.size());
 			
 			// 添加已访问URL
-			LinkQueue.addVisitedUrl(url);
+//			LinkQueue.addVisitedUrl(url);
 			
 			// 解析用户信息
 			if (url.startsWith(this.peopleUrl) && url.lastIndexOf("/") == (this.peopleUrl.length() - 1)) {
 				UserInfo userInfo = parserTool.parserUserInfo(url, pageCode);
-				System.out.println(userInfo.toString());
+				System.out.println(Thread.currentThread().getName() + " : " + userInfo.toString());
 			}
-			
+			try {
+				Thread.sleep(1000);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-		
 		this.countDownLatch.countDown();
-		
 	}
 
 }

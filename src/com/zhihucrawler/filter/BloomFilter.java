@@ -7,7 +7,7 @@ import com.zhihucrawler.model.CrawlUrl;
 public class BloomFilter {
 	
 	private static final int DEFAULT_SIZE = 2 << 24;// BitSet初始分配2 << 24个bit
-	private static final int[] seeds = new int[] {5, 7, 11, 13, 31, 37, 61};// 不同哈希函数的种子,一般应取质数
+	private static final int[] seeds = new int[] {7, 11, 13, 31, 37, 61};// 不同哈希函数的种子,一般应取质数
 	private BitSet bits = new BitSet(DEFAULT_SIZE);
 	private SimpleHash[] func = new SimpleHash[seeds.length];// 哈希函数对象
 	
@@ -16,7 +16,7 @@ public class BloomFilter {
 			func[i] = new SimpleHash(DEFAULT_SIZE, seeds[i]);
 		}
 	}
-	
+
 	// 覆盖方法,把URL添加进来
 //	public void add(CrawlUrl value) {
 //		if (value != null) {
@@ -70,5 +70,24 @@ public class BloomFilter {
 			return (cap - 1) & result;
 		}
     }
+    
+    public static void main(String[] args) {
+		BloomFilter bloomFilter = new BloomFilter();
+		if (bloomFilter.contains("https://www.zhihu.com/")) {
+			System.out.println("1");
+		}
+		bloomFilter.add("https://www.zhihu.com/");
+		if (bloomFilter.contains("https://www.zhihu.com/")) {
+			System.out.println("2");
+		}
+		bloomFilter.add("https://www.zhihu.com/");
+		if (bloomFilter.contains("https://www.zhihu.com/")) {
+			System.out.println("3");
+		}
+		bloomFilter.add("https://www.zhihu.com/");
+		if (bloomFilter.contains("https://www.zhihu.com/")) {
+			System.out.println("4");
+		}
+	}
     
 }

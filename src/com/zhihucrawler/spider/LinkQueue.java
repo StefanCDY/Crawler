@@ -24,19 +24,23 @@ public class LinkQueue {
 		}
 		if (!bloomFilter.contains(url)) {// bloomFilter不包含,未访问过
 			waitList.addLast(url);
+			bloomFilter.add(url);
 		}
 	}
 	
 	// 添加已访问URL
-	synchronized static public void addVisitedUrl(String url){
-		bloomFilter.add(url);
-		visitedNum++;
-	}
+//	synchronized static public void addVisitedUrl(String url){
+//		bloomFilter.add(url);
+//		visitedNum++;
+//	}
 	
 	// 获取等待队列URL
 	synchronized static public Object getWaitUrl(){
 		if (!waitList.isEmpty()) {
-			return waitList.removeFirst();			
+			String url = (String) waitList.removeFirst();
+//			bloomFilter.add(url);
+			visitedNum++;
+			return url;
 		}
 		return null;
 	}
@@ -54,6 +58,16 @@ public class LinkQueue {
 	// 判断等待队列是否为空
 	synchronized static public boolean isEmpty(){
 		return waitList.isEmpty();
+	}
+	
+	public static void main(String[] args) {
+		LinkQueue.addWaitUrl("https://www.zhihu.com/");
+//		LinkQueue.addVisitedUrl("https://www.zhihu.com/");
+		LinkQueue.addWaitUrl("https://www.zhihu.com/");
+		LinkQueue.addWaitUrl("https://www.zhihu.com/");
+		LinkQueue.addWaitUrl("https://www.zhihu1.com/");
+		System.out.println(LinkQueue.getWaitListNum());
+		System.out.println(LinkQueue.getVisitedNum());
 	}
 	
 }

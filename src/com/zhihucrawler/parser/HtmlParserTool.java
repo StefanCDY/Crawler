@@ -1,9 +1,7 @@
 package com.zhihucrawler.parser;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.htmlparser.NodeFilter;
 import org.htmlparser.Parser;
@@ -68,13 +66,21 @@ public class HtmlParserTool {
 			
 			for (int i = 0; i < nodeList.size(); i++) {
 				LinkTag linkTag = (LinkTag) nodeList.elementAt(i);
-				String link = RegexUtil.getHttpUrl(linkTag.getLink(), url);
-				if (!link.startsWith(this.validateUrl)) {
+				String link = linkTag.getLink();
+				if (link.contains(";")) {
 					continue;
-				}
-				int index = link.indexOf("#");
-				if (index != -1) {// 含有"#"
+				} else if (link.startsWith("#")) {
+					continue;
+				} else if (link.contains("#")) {
+					int index = link.indexOf("#");
 					link = link.substring(0, index);
+				} else if (link.startsWith("//")) {
+					continue;
+				} else if (link.startsWith("/")) {
+					link = "https://www.zhihu.com" + link;
+				}
+				if (!link.contains("zhihu")) {
+					continue;
 				}
 				links.add(link);
 			}

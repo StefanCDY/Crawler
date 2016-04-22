@@ -75,8 +75,9 @@ public class EncryptUtil {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String str = "aa";
-		System.out.println(parseStrToMD5(str));
+		String str = "总有一天,你会强大起来.";
+		System.out.println(parseStrToMD5("5oC75pyJ5LiA5aSpLOS9oOS8muW8uuWkp+i1t+adpS4="));// 84d3f1916bce38f324e9772ce780f666
+		System.out.println(encrypt(parseStrToMD5(str),SHA1));// 49dd4378fd33cdf7aa353687cee39739e1e5f1f8
 		System.out.println(parseStrToUpperMD5(str));
 		System.out.println(parseStrTo16MD5(str));
 		System.out.println(parseStrToUpper16MD5(str));
