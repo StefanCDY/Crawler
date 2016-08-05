@@ -50,10 +50,13 @@ public class TaskMaster {
 		
 		try {
 			countDownLatch.await();
+			
 //			boolean loop = true;
 //			do {// 等待所有任务完成
 //				loop = executorService.awaitTermination(3, TimeUnit.SECONDS);// 阻塞,直到线程池里所有任务结束,每隔n秒监测一次
 //			} while (!loop);
+			
+			clientTool.closeHttpClient();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

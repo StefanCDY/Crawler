@@ -9,17 +9,20 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "url")
+@Table(name = "CrawlUrl")
 public class CrawlUrl implements Serializable {
 
 	private static final long serialVersionUID = 7268783704275835405L;
 	
 	private long id;
-	private String url;
-	private int depth;
-	private int state;
-	private long addTime;
-	private long updateTime;
+    private String url;
+    private int statusCode;
+    private String pageCode;
+    private String requestHeader;
+    private String responseHeader;
+    private int depth;
+    private int state;
+    private long createTime;
 
 	public CrawlUrl() {
 		super();
@@ -44,8 +47,44 @@ public class CrawlUrl implements Serializable {
 	public void setUrl(String url) {
 		this.url = url;
 	}
+	
+	@Column(name = "statusCode")
+	public int getStatusCode() {
+		return statusCode;
+	}
 
-	@Column(name = "depth", nullable = false)
+	public void setStatusCode(int statusCode) {
+		this.statusCode = statusCode;
+	}
+
+	@Column(name = "pageCode")
+	public String getPageCode() {
+		return pageCode;
+	}
+
+	public void setPageCode(String pageCode) {
+		this.pageCode = pageCode;
+	}
+
+	@Column(name = "requestHeader")
+	public String getRequestHeader() {
+		return requestHeader;
+	}
+
+	public void setRequestHeader(String requestHeader) {
+		this.requestHeader = requestHeader;
+	}
+
+	@Column(name = "responseHeader")
+	public String getResponseHeader() {
+		return responseHeader;
+	}
+
+	public void setResponseHeader(String responseHeader) {
+		this.responseHeader = responseHeader;
+	}
+
+	@Column(name = "depth")
 	public int getDepth() {
 		return depth;
 	}
@@ -63,29 +102,22 @@ public class CrawlUrl implements Serializable {
 		this.state = state;
 	}
 
-	@Column(name = "addTime")
-	public long getAddTime() {
-		return addTime;
+	@Column(name = "createTime")
+	public long getCreateTime() {
+		return createTime;
 	}
 
-	public void setAddTime(long addTime) {
-		this.addTime = addTime;
-	}
-	
-	@Column(name = "updateTime")
-	public long getUpdateTime() {
-		return updateTime;
-	}
-
-	public void setUpdateTime(long updateTime) {
-		this.updateTime = updateTime;
+	public void setCreateTime(long createTime) {
+		this.createTime = createTime;
 	}
 
 	@Override
 	public String toString() {
-		return "Url [id=" + id + ", url=" + url + ", depth=" + depth
-				+ ", state=" + state + ", addTime=" + addTime + ", updateTime="
-				+ updateTime + "]";
+		return "CrawlUrl [id=" + id + ", url=" + url + ", statusCode="
+				+ statusCode + ", pageCode=" + pageCode + ", requestHeaders="
+				+ requestHeader + ", responseHeaders="
+				+ responseHeader + ", depth=" + depth
+				+ ", state=" + state + ", createTime=" + createTime + "]";
 	}
-
+	
 }

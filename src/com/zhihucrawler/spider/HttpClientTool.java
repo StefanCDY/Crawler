@@ -175,8 +175,18 @@ public class HttpClientTool {
 	}
 	
 	// 获取HttpClient对象
-	private static CloseableHttpClient getHttpClient() {
+	public static CloseableHttpClient getHttpClient() {
 		return httpClient;
+	}
+	
+	public void closeHttpClient() {
+		try {
+			if (httpClient != null) {				
+				httpClient.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	// 获取Get请求

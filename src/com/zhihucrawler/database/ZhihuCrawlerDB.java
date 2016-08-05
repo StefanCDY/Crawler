@@ -18,11 +18,11 @@ public class ZhihuCrawlerDB {
 			ResultSet resultSet = dbServer.select(sql);
 			while (resultSet.next()) {
 				CrawlUrl url = new CrawlUrl();
-				url.setAddTime(resultSet.getLong("addTime"));
+//				url.setAddTime(resultSet.getLong("addTime"));
 				url.setDepth(resultSet.getInt("depth"));
 				url.setId(resultSet.getInt("id"));
 				url.setState(resultSet.getInt("state"));
-				url.setUpdateTime(resultSet.getLong("updateTime"));
+//				url.setUpdateTime(resultSet.getLong("updateTime"));
 				url.setUrl(resultSet.getString("url"));
 				return url;
 			}

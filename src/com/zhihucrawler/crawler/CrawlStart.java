@@ -38,8 +38,8 @@ public class CrawlStart {
 			url.setUrl(seeds[i]);
 			url.setDepth(0);
 			url.setState(0);
-			url.setAddTime(System.currentTimeMillis());
-			url.setUpdateTime(System.currentTimeMillis());
+//			url.setAddTime(System.currentTimeMillis());
+//			url.setUpdateTime(System.currentTimeMillis());
 			crawlerDB.saveUrl(url);
 		}
 		// 初始化程序池

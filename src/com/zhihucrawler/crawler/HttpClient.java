@@ -7,6 +7,7 @@ import java.io.InterruptedIOException;
 import java.net.ProxySelector;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -332,6 +333,17 @@ public class HttpClient {
 		CloseableHttpResponse response = null;
 		try {
 			response = httpClient.execute(request, HttpClientContext.create());
+			StringBuffer headers = new StringBuffer();
+			for (Header header : response.getAllHeaders()) {
+				headers.append(header.getName() + ": " + header.getValue() + System.getProperty("line.separator", "\n"));
+			}
+			System.out.println(headers.toString());
+			System.out.println("+++++++++++++++++++++");
+			headers = new StringBuffer();
+            for (Header header : request.getAllHeaders()) {
+                headers.append(header.getName() + ": " + header.getValue() + System.getProperty("line.separator", "\n"));
+            }
+            System.out.println(headers.toString());
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (statusCode == HttpStatus.SC_OK) { 
 				HttpEntity httpEntity = response.getEntity();// 获得响应实体
@@ -408,8 +420,9 @@ public class HttpClient {
 	
 	public static void main(String[] args) {
 		HttpClient httpClient = new HttpClient();
+		httpClient.crawlPage("https://www.zhihu.com/");
 //		httpClient.login();
-		System.out.println(httpClient.crawlPage("https://www.zhihu.com/"));
+//		System.out.println(httpClient.crawlPage("https://www.zhihu.com/"));
 	}
 	
 }

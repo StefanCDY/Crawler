@@ -47,8 +47,8 @@ public class HtmlParserTool {
 				url.setUrl(link);
 				url.setDepth(purl.getDepth() + 1);
 				url.setState(0);
-				url.setAddTime(System.currentTimeMillis());
-				url.setUpdateTime(System.currentTimeMillis());
+//				url.setAddTime(System.currentTimeMillis());
+//				url.setUpdateTime(System.currentTimeMillis());
 				urlList.add(url);
 			}
 		} catch (ParserException e) {
